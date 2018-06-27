@@ -1,9 +1,9 @@
 [
   {
     "remote": "github",
-    "repository":  "GZR-Kernels/Optimus_Drunk_Potter",
+    "repository":  "Nitrogen-Potter/android_kernel_motorola_msm8953",
     "target_path": "kernel/motorola/msm8953",
-    "branch": "8.1-64"
+    "branch": "Extended-kernel.lnx.3.18.r33-rel"
   },
   {
     "remote": "github",
