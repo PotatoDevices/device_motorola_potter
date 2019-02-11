@@ -102,7 +102,6 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
-    GoogleCameraMod \
     libbson \
     Snap \
     camera.device@1.0-impl \
