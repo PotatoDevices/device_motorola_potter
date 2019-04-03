@@ -1,3 +1,4 @@
+
 # Copyright (c) 2009-2012, 2014-2016, The Linux Foundation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -538,8 +539,8 @@ service vendor.esepmdaemon /system/vendor/bin/esepmdaemon
     user system
     group nfc
 
-service vendor.wcnss-service /system/bin/wcnss_service
-    class main
+service wcnss-service /system/vendor/bin/wcnss_service
+    class late_start
     user system
     group system wifi radio
     oneshot
