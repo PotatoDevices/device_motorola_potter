@@ -87,14 +87,6 @@ on init
     chown root system /sys/fs/cgroup/memory/bg/tasks
     chmod 0660 /sys/fs/cgroup/memory/bg/tasks
 
-    # schedtune values for eas
-    write /dev/stune/foreground/schedtune.prefer_idle 1
-    write /dev/stune/top-app/schedtune.prefer_idle 1
-    write /dev/stune/top-app/schedtune.boost 10
-    write /dev/stune/top-app/schedtune.sched_boost 1
-    write /dev/stune/rt/schedtune.boost 0
-    write /dev/stune/rt/schedtune.prefer_idle 1
-
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
     setrlimit 8 67108864 67108864
@@ -289,10 +281,10 @@ on boot
     chmod 0664 /sys/class/graphics/fb0/msm_cmd_autorefresh_en
 
     write /dev/cpuset/top-app/cpus 0-7
-    write /dev/cpuset/top-app/boost/cpus 0-3
-    write /dev/cpuset/foreground/cpus 0-7
-    write /dev/cpuset/background/cpus 0-3
-    write /dev/cpuset/system-background/cpus 4-7
+    write /dev/cpuset/top-app/boost/cpus 4-7
+    write /dev/cpuset/foreground/cpus 0-6
+    write /dev/cpuset/background/cpus 0-1
+    write /dev/cpuset/system-background/cpus 0-3
 
     # add a cpuset for the camera daemon
     # we want all cores for camera
@@ -563,6 +555,12 @@ service ecompassd /system/vendor/bin/akmd09912
     user compass
     group compass misc input
     disabled
+
+service vendor.energy-awareness /system/vendor/bin/energy-awareness
+    class main
+    user root
+    group system
+    oneshot
 
 service vendor.irsc_util /system/vendor/bin/irsc_util "/system/vendor/etc/sec_config"
     class core
@@ -835,7 +833,7 @@ on charger
 
 on property:sys.boot_completed=1
     write /dev/kmsg "Boot completed "
-    setprop sys.io.scheduler cfq
+    setprop sys.io.scheduler bfq
 
     # scheduler settings
     write /proc/sys/kernel/sched_window_stats_policy 3
@@ -879,7 +877,7 @@ on property:sys.boot_completed=1
     write /sys/class/devfreq/soc:qcom,cpubw/min_freq 1611
     write /sys/class/devfreq/soc:qcom,gpubw/bw_hwmon/io_percent 40
 
-    # disable thermal & BCL core_control to update schedutil gov settings
+    # disable thermal & BCL core_control to update interactive gov settings
     write /sys/module/msm_thermal/core_control/enabled 0
     write /sys/devices/soc/soc:qcom,bcl/mode "disable"
     write /sys/devices/soc/soc:qcom,bcl/hotplug_mask 0
@@ -888,18 +886,14 @@ on property:sys.boot_completed=1
 
     # governor settings
     write /sys/devices/system/cpu/cpu0/online 1
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "schedutil"
-    write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us 500
-    write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us 20000
-    write /sys/devices/system/cpu/cpu0/cpufreq/schedutil/iowait_boost_enable 0
-
-    # cpu boost
-    write /sys/module/cpu_boost/parameters/input_boost_freq "0:1401600 1:0 2:0 3:0 4:1401600 5:0 6:0 7:0"
-    write /sys/module/cpu_boost/parameters/input_boost_ms 500
-
-    # dynamic stune boost
-    write /sys/module/cpu_boost/parameters/dynamic_stune_boost 40
-    write /sys/module/cpu_boost/parameters/dynamic_stune_boost_ms 1500
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "interactive"
+    write /sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay "20000 1401600:40000"
+    write /sys/devices/system/cpu/cpufreq/interactive/go_hispeed_load 85
+    write /sys/devices/system/cpu/cpufreq/interactive/timer_rate 20000
+    write /sys/devices/system/cpu/cpufreq/interactive/hispeed_freq 1401600
+    write /sys/devices/system/cpu/cpufreq/interactive/io_is_busy 0
+    write /sys/devices/system/cpu/cpufreq/interactive/target_loads "85 1401600:80"
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 652800
 
     # re-enable thermal & BCL core_control now
     write /sys/module/msm_thermal/core_control/enabled 1
@@ -921,11 +915,13 @@ on property:sys.boot_completed=1
     write /sys/module/lpm_levels/parameters/sleep_disabled 0
 
     # SMP scheduler
-    write /proc/sys/kernel/sched_upmigrate 90
+    write /proc/sys/kernel/sched_upmigrate 85
     write /proc/sys/kernel/sched_downmigrate 85
     write /proc/sys/kernel/sched_upmigrate_min_nice 19
 
     # Enable sched guided freq control
+    write /sys/devices/system/cpu/cpufreq/interactive/use_sched_load 1
+    write /sys/devices/system/cpu/cpufreq/interactive/use_migration_notif 1
     write /proc/sys/kernel/sched_freq_inc_notify 200000
     write /proc/sys/kernel/sched_freq_dec_notify 200000
 
@@ -937,15 +933,12 @@ on property:sys.boot_completed=1
     write /sys/module/process_reclaim/parameters/swap_opt_eff 30
     write /sys/module/process_reclaim/parameters/pressure_min 50
     write /sys/module/process_reclaim/parameters/per_swap_size 512
-    write /sys/module/lowmemorykiller/parameters/minfree "18432,23040,27648,32256,36864,46080"
-    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 0
+    write /sys/module/lowmemorykiller/parameters/minfree "15360,19200,23040,26880,34415,43737"
 
     #Reset the "read ahead" setting for system patition
     # result: ext4: 32KB, dm_verity:64KB, block layer: 128KB
     write /sys/fs/ext4/dm-0/inode_readahead_blks 8
     write /sys/module/dm_verity/parameters/prefetch_cluster 65536
-
-    write /sys/module/process_reclaim/parameters/enable_process_reclaim 0
 
     write /sys/block/mmcblk0/bdi/read_ahead_kb 128
     write /sys/block/mmcblk0/queue/read_ahead_kb 128
