@@ -20,6 +20,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 
+PRODUCT_BOARD_PLATFORM := msm8996
+
+PRODUCT_USES_QCOM_HARDWARE := true
+
 PRODUCT_ENFORCE_RRO_TARGETS := frameworks-res
 
 #PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
