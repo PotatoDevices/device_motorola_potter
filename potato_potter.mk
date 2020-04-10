@@ -37,6 +37,7 @@ PRODUCT_DEVICE := potter
 PRODUCT_NAME := potato_potter
 PRODUCT_BRAND := motorola
 PRODUCT_MANUFACTURER := motorola
+PRODUCT_ARCH := arm64
 
 PRODUCT_GMS_CLIENTID_BASE := android-motorola
 
