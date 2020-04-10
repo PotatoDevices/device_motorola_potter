@@ -30,6 +30,7 @@ $(call inherit-product, device/motorola/potter/device.mk)
 TARGET_SCREEN_WIDTH := 1080
 TARGET_SCREEN_HEIGHT := 1920
 TARGET_BOOT_ANIMATION_RES := 1080
+TARGET_BOOTANIM_LOW_RES := true
 
 ## Device identifier. This must come after all inclusions
 PRODUCT_DEVICE := potter
